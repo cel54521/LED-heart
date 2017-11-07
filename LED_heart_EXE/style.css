@@ -1,7 +1,7 @@
 #command {
     position: fixed !important;
     position: absolute;left:760px;
-    width:300px; height:800px; margin:20px; background-color:#FF9966; border:1px solid #cc3333;
+    width:430px; height:600px; margin:20px; background-color:#FF9966; border:1px solid #cc3333;
 }
 
 #start {

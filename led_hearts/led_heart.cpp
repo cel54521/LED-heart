@@ -12,11 +12,13 @@
 int value1;
 int value2;
 int value3;
+int sw;
+
 void setup()
 {
     value1 = 0;
     value2 = 0;
-    value3 = 0;
+    sw = 0;
     pinMode(PIN_LED_RED   , OUTPUT);
     pinMode(PIN_LED_GREEN , OUTPUT);
     pinMode(PIN_LED_BLUE  , OUTPUT);
@@ -24,11 +26,15 @@ void setup()
     pinMode(PIN_SW        , INPUT);
 }
 void cyclic_handler(intptr_t exinf) {
-	irot_rdq(LOOP_PRI); /* change the running loop. */
+  irot_rdq(LOOP_PRI); /* change the running loop. */
 }
 void loop()
 {
-    digitalWrite(PIN_LED_BLUE, 1);
+    digitalWrite(PIN_LED_RED, 1);
+    delay(200);
+    digitalWrite(PIN_LED_RED, 0);
+    delay(200);
+    goto end0;
 end0:
     ;
 }

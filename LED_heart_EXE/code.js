@@ -1,5 +1,10 @@
 "use strict";
 
+const remote = require('electron').remote;
+const BrowserWindow = remote.BrowserWindow;
+const fs = require('fs');
+const dialog = remote.dialog;
+
 var code;
 var code2;
 var table;
@@ -354,4 +359,166 @@ function writeFile(path, data) {
             alert('error : ' + error);
         }
     });
+}
+
+// ソースコードの保存
+function saveFile() {
+    var data = new Array();
+
+    table = document.getElementById("codeTable");
+
+
+    // 保存用データ作成
+    for(var i=0;i<table.rows.length;i++){
+        for(var j=0;j<table.rows[i].cells.length;j++){
+
+            var dataObj = {
+                id: null,
+                direction:null,
+                op:null,
+                text:null
+            };
+
+            if(table.rows[i].cells[j].firstChild.firstChild != null){
+                var codeblock = table.rows[i].cells[j].firstChild.firstChild;
+                var direction = codeblock.firstElementChild;
+
+                dataObj.id =codeblock.id;
+
+                if(direction.rows[0].cells[1].bgColor.toUpperCase() == "#3333CC"){
+                    dataObj.direction = 1;
+                }else if(direction.rows[1].cells[0].bgColor.toUpperCase() == "#3333CC"){
+                    dataObj.direction = 2;
+                }else if(direction.rows[1].cells[2].bgColor.toUpperCase() == "#3333CC"){
+                    dataObj.direction = 3;
+                }else if(direction.rows[2].cells[1].bgColor.toUpperCase() == "#3333CC"){
+                    dataObj.direction = 4;
+                }else{
+                    dataObj.direction = 0;
+                }
+
+                if( (codeblock.id == "value1") ||(codeblock.id == "value2") || (codeblock.id == "value3") ){
+                    dataObj.op = codeblock.firstElementChild.rows[1].cells[1].children[1].value;
+                    dataObj.text = codeblock.firstElementChild.rows[1].cells[1].children[2].value;
+
+                }else if( (codeblock.id == "parallel") ||(codeblock.id == "nop") ){
+
+                }else{
+                    dataObj.text = codeblock.firstElementChild.rows[1].cells[1].children[1].value;
+                }
+
+
+            }
+            data.push(dataObj);
+        }
+
+    }
+
+
+    // 「ファイルを保存」ダイアログの呼び出し
+    dialog.showSaveDialog(BrowserWindow.getFocusedWindow(),
+                          {title:'Save', filters: [{name:'Source', extensions:['lhc']},{name: 'All Files', extensions: ['*']}]},
+                          function (filePaths)
+                          {
+
+                              if(filePaths != null){
+                                  fs.writeFile(filePaths, JSON.stringify(data), function (error) {
+                                      if (error != null) {
+                                          alert('error : ' + error);
+                                      }
+                                  });
+                              }
+                          });
+}
+
+// ソースコードを開く
+function openFile() {
+    var data = null;
+
+    table = document.getElementById("codeTable");
+
+    // 「ファイルを開く」ダイアログの呼び出し
+    dialog.showOpenDialog(BrowserWindow.getFocusedWindow(),
+                          {title:'Open', filters: [{name:'Source', extensions:['lhc']},{name: 'All Files', extensions: ['*']}],properties: ['openFile']},
+                          function (filePaths)
+                          {
+                              if(filePaths != null){
+                                  data = JSON.parse(fs.readFileSync(filePaths[0], "utf-8"));
+
+                                  for(var i=0;i<table.rows.length;i++){
+                                      for(var j=0;j<table.rows[i].cells.length;j++){
+                                          var dataObj = data[i*table.rows[i].cells.length+j];
+                                          if(dataObj.id != null){
+                                              var elm = document.getElementById(dataObj.id);
+                                              var copy_elm = elm.cloneNode(true);
+
+                                              copy_elm.setAttribute("id"+no,"elm"+no);
+                                              no++;
+
+
+                                              switch(dataObj.id){
+                                              case "ledOn":
+                                                  copy_elm.firstElementChild.rows[1].cells[1].children[1].value = dataObj.text;
+                                                  break;
+                                              case "ledOff":
+                                                  copy_elm.firstElementChild.rows[1].cells[1].children[1].value = dataObj.text;
+                                                  break;
+                                              case "nop":
+                                                  break;
+                                              case "if":
+                                                  copy_elm.firstElementChild.rows[1].cells[1].children[1].value = dataObj.text;
+                                                  break;
+                                              case "value1":
+                                                  copy_elm.firstElementChild.rows[1].cells[1].children[1].value = dataObj.op;
+                                                  copy_elm.firstElementChild.rows[1].cells[1].children[2].value = dataObj.text;
+                                                  break;
+                                              case "value2":
+                                                  copy_elm.firstElementChild.rows[1].cells[1].children[1].value = dataObj.op;
+                                                  copy_elm.firstElementChild.rows[1].cells[1].children[2].value = dataObj.text;
+                                                  break;
+                                              case "value3":
+                                                  copy_elm.firstElementChild.rows[1].cells[1].children[1].value = dataObj.op;
+                                                  copy_elm.firstElementChild.rows[1].cells[1].children[2].value = dataObj.text;
+                                                  break;
+                                              case "delay":
+                                                  copy_elm.firstElementChild.rows[1].cells[1].children[1].value = dataObj.text;
+                                                  break;
+                                              case "switch":
+                                                  break;
+                                              case "parallel":
+                                                  break;
+
+                                              }
+
+                                              if( (dataObj.id == "if") || (dataObj.id == "parallel")){
+                                                  copy_elm.firstElementChild.rows[1].cells[2].bgColor = "#CC3333";
+                                                  copy_elm.firstElementChild.rows[2].cells[1].bgColor = "#3333CC";
+                                              }else{
+                                                  switch(dataObj.direction){
+                                                  case 1:
+                                                      copy_elm.firstElementChild.rows[0].cells[1].bgColor = "#3333CC";
+                                                      break;
+                                                  case 2:
+                                                      copy_elm.firstElementChild.rows[1].cells[0].bgColor = "#3333CC";
+                                                      break;
+                                                  case 3:
+                                                      copy_elm.firstElementChild.rows[1].cells[2].bgColor = "#3333CC";
+                                                      break;
+                                                  case 4:
+                                                      copy_elm.firstElementChild.rows[2].cells[1].bgColor = "#3333CC";
+                                                      break;
+                                                  default:
+                                                      break;
+                                                  }
+                                              }
+                                              table.rows[i].cells[j].firstChild.appendChild(copy_elm);
+
+                                          }
+
+
+                                      }
+                                  }
+
+                              }
+                          });
 }
